@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Calculadora Casio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: #8b8b8b;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+            touch-action: manipulation;
+        }
+
+        .calculator {
+            width: 100%;
+            max-width: 320px;
+            background: #c0c0c0;
+            border-radius: 12px;
+            box-shadow: 
+                0 5px 15px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            overflow: hidden;
+            border: 2px solid #333;
+        }
+
+        .brand-bar {
+            background: linear-gradient(to bottom, #333, #000);
+            color: #fff;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border-bottom: 1px solid #555;
+        }
+
+        .model {
+            font-size: 0.75rem;
+            color: #ffcc00;
+        }
+
+        .solar-panel {
+            height: 20px;
+            background: linear-gradient(135deg, #3a6186, #89253e, #3a6186);
+            margin: 8px 15px;
+            border-radius: 3px;
+            border: 1px solid #333;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .display-container {
+            background: #2a2a2a; /* Mais escuro para melhor contraste */
+            padding: 12px;
+            margin: 0 10px;
+            border-radius: 5px;
+            border: 2px inset #555;
+        }
+
+        .display {
+            background: #9cad9f;
+            border: 2px inset #7a897c;
+            border-radius: 3px;
+            padding: 10px;
+            text-align: right;
+            font-size: 1.8rem;
+            font-weight: bold;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            word-break: break-all;
+            overflow: hidden;
+            color: #000; /* Preto puro para máximo contraste */
+            font-family: 'Courier New', monospace;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .history {
+            font-size: 0.9rem; /* Um pouco maior */
+            color: #e0e0e0; /* Cinza claro para melhor visibilidade */
+            text-align: right;
+            min-height: 20px; /* Mais espaço */
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-family: 'Arial', sans-serif;
+            font-weight: 500;
+            background: rgba(0, 0, 0, 0.3); /* Fundo escuro semi-transparente */
+            padding: 4px 8px;
+            border-radius: 3px;
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            padding: 12px;
+            background: #a0a0a0;
+        }
+
+        button {
+            border: none;
+            border-radius: 6px;
+            padding: 12px 5px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.1s;
+            box-shadow: 
+                0 3px 0 #666,
+                0 4px 4px rgba(0, 0, 0, 0.3);
+            background: #e0e0e0;
+            color: #333;
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        button:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #666;
+        }
+
+        .number {
+            background: #f0f0f0;
+        }
+
+        .number:active {
+            background: #d8d8d8;
+        }
+
+        .operator {
+            background: #ff9500;
+            color: white;
+        }
+
+        .operator:active {
+            background: #e08500;
+        }
+
+        .function {
+            background: #6c757d;
+            color: white;
+            font-size: 0.8rem;
+        }
+
+        .function:active {
+            background: #5a6268;
+        }
+
+        .equals {
+            background: #007bff;
+            color: white;
+        }
+
+        .equals:active {
+            background: #0069d9;
+        }
+
+        .wide {
+            grid-column: span 2;
+        }
+
+        .error {
+            color: #ff4444; /* Vermelho mais vibrante */
+            font-weight: bold;
+            background: rgba(255, 0, 0, 0.1); /* Fundo vermelho suave */
+        }
+
+        .mode-indicator {
+            color: #4CAF50; /* Verde para indicadores de modo */
+            font-weight: bold;
+        }
+
+        .history-panel {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            height: 100%;
+            background: #e0e0e0;
+            transition: right 0.3s;
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .history-panel.open {
+            right: 0;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #aaa;
+        }
+
+        .history-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .close-history {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+        }
+
+        .history-list {
+            list-style-type: none;
+        }
+
+        .history-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #ccc;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 1rem;
+            color: #333;
+        }
+
+        .history-item:hover {
+            background: #d0d0d0;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+        }
+
+        /* Melhorias para mobile */
+        @media (max-width: 380px) {
+            .calculator {
+                max-width: 300px;
+            }
+            
+            button {
+                padding: 10px 3px;
+                font-size: 0.85rem;
+            }
+            
+            .display {
+                font-size: 1.6rem;
+                min-height: 55px;
+            }
+            
+            .history {
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-height: 600px) {
+            body {
+                padding: 5px;
+            }
+            
+            .calculator {
+                max-width: 300px;
+            }
+            
+            button {
+                padding: 8px 3px;
+                font-size: 0.8rem;
+            }
+            
+            .display {
+                font-size: 1.5rem;
+                min-height: 50px;
+                padding: 8px;
+            }
+        }
+
+        /* Efeito de texto em relevo nos botões */
+        button {
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+
+        .function, .operator, .equals {
+            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle">🌙</button>
+
+    <div class="calculator">
+        <div class="brand-bar">
+            <div>CASIO</div>
+            <div class="model">fx-82MS</div>
+        </div>
+        
+        <div class="solar-panel"></div>
+        
+        <div class="display-container">
+            <div class="history" id="historyDisplay"></div>
+            <div class="display" id="inputDisplay">0</div>
+        </div>
+        
+        <div class="keypad">
+            <!-- Primeira linha -->
+            <button class="function" data-action="shift">Shift</button>
+            <button class="function" data-action="alpha">Alpha</button>
+            <button class="function" data-action="clear">AC</button>
+            <button class="function" data-action="delete">DEL</button>
+            <button class="function" data-action="history">HIST</button>
+            
+            <!-- Segunda linha -->
+            <button class="function" data-action="sin">sin</button>
+            <button class="function" data-action="cos">cos</button>
+            <button class="function" data-action="tan">tan</button>
+            <button class="operator" data-action="power">x^y</button>
+            <button class="function" data-action="sqrt">√</button>
+            
+            <!-- Terceira linha -->
+            <button class="function" data-action="log">log</button>
+            <button class="function" data-action="ln">ln</button>
+            <button class="number" data-action="7">7</button>
+            <button class="number" data-action="8">8</button>
+            <button class="number" data-action="9">9</button>
+            
+            <!-- Quarta linha -->
+            <button class="function" data-action="factorial">x!</button>
+            <button class="function" data-action="percent">%</button>
+            <button class="number" data-action="4">4</button>
+            <button class="number" data-action="5">5</button>
+            <button class="number" data-action="6">6</button>
+            
+            <!-- Quinta linha -->
+            <button class="function" data-action="parentheses">( )</button>
+            <button class="function" data-action="pi">π</button>
+            <button class="number" data-action="1">1</button>
+            <button class="number" data-action="2">2</button>
+            <button class="number" data-action="3">3</button>
+            
+            <!-- Sexta linha -->
+            <button class="function" data-action="mode">MODE</button>
+            <button class="function" data-action="ans">ANS</button>
+            <button class="number wide" data-action="0">0</button>
+            <button class="number" data-action="decimal">.</button>
+            <button class="equals" data-action="equals">=</button>
+            
+            <!-- Operadores à direita -->
+            <button class="operator" data-action="divide">÷</button>
+            <button class="operator" data-action="multiply">×</button>
+            <button class="operator" data-action="subtract">-</button>
+            <button class="operator" data-action="add">+</button>
+        </div>
+    </div>
+
+    <div class="history-panel" id="historyPanel">
+        <div class="history-header">
+            <div class="history-title">Histórico de Cálculos</div>
+            <button class="close-history" id="closeHistory">×</button>
+        </div>
+        <ul class="history-list" id="historyList"></ul>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos da interface
+            const inputDisplay = document.getElementById('inputDisplay');
+            const historyDisplay = document.getElementById('historyDisplay');
+            const historyPanel = document.getElementById('historyPanel');
+            const historyList = document.getElementById('historyList');
+            const themeToggle = document.getElementById('themeToggle');
+            const closeHistory = document.getElementById('closeHistory');
+            const historyButton = document.querySelector('[data-action="history"]');
+            const buttons = document.querySelectorAll('button');
+            
+            // Variáveis de estado
+            let currentInput = '0';
+            let previousInput = '';
+            let operation = null;
+            let waitingForNewInput = false;
+            let calculationHistory = [];
+            let parenthesesOpen = false;
+            let shiftMode = false;
+            let lastAnswer = null;
+            let isDegreeMode = true;
+            
+            // Inicialização
+            updateDisplay();
+            
+            // Event Listeners
+            buttons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const action = button.getAttribute('data-action');
+                    handleButtonClick(action);
+                });
+            });
+            
+            document.addEventListener('keydown', handleKeyboardInput);
+            
+            themeToggle.addEventListener('click', toggleTheme);
+            closeHistory.addEventListener('click', toggleHistoryPanel);
+            historyButton.addEventListener('click', toggleHistoryPanel);
+            
+            // Funções principais
+            function handleButtonClick(action) {
+                if (!isNaN(action)) {
+                    inputNumber(action);
+                } else if (action === 'decimal') {
+                    inputNumber('.');
+                } else if (action === 'pi') {
+                    inputNumber('π');
+                } else if (action === 'ans' && lastAnswer !== null) {
+                    inputNumber(lastAnswer.toString());
+                } else if (action === 'shift') {
+                    shiftMode = !shiftMode;
+                    updateShiftButtons();
+                } else {
+                    handleOperation(action);
+                }
+                updateDisplay();
+            }
+            
+            function inputNumber(value) {
+                if (waitingForNewInput) {
+                    currentInput = value === 'π' ? Math.PI.toString() : value;
+                    waitingForNewInput = false;
+                } else {
+                    if (value === 'π') {
+                        currentInput = currentInput === '0' ? Math.PI.toString() : currentInput + Math.PI.toString();
+                    } else {
+                        currentInput = currentInput === '0' ? value : currentInput + value;
+                    }
+                }
+            }
+            
+            function handleOperation(op) {
+                switch (op) {
+                    case 'clear':
+                        clearAll();
+                        break;
+                    case 'delete':
+                        deleteLast();
+                        break;
+                    case 'equals':
+                        calculate();
+                        break;
+                    case 'add':
+                    case 'subtract':
+                    case 'multiply':
+                    case 'divide':
+                        setOperation(op);
+                        break;
+                    case 'percent':
+                        calculatePercent();
+                        break;
+                    case 'power':
+                        setOperation('power');
+                        break;
+                    case 'sqrt':
+                        calculateSquareRoot();
+                        break;
+                    case 'sin':
+                        calculateTrig('sin');
+                        break;
+                    case 'cos':
+                        calculateTrig('cos');
+                        break;
+                    case 'tan':
+                        calculateTrig('tan');
+                        break;
+                    case 'log':
+                        calculateLog();
+                        break;
+                    case 'ln':
+                        calculateLn();
+                        break;
+                    case 'factorial':
+                        calculateFactorial();
+                        break;
+                    case 'parentheses':
+                        toggleParentheses();
+                        break;
+                    case 'mode':
+                        toggleAngleMode();
+                        break;
+                }
+            }
+            
+            function setOperation(op) {
+                if (currentInput !== '') {
+                    if (previousInput !== '' && !waitingForNewInput) {
+                        calculate();
+                    }
+                    operation = op;
+                    previousInput = currentInput;
+                    waitingForNewInput = true;
+                }
+            }
+            
+            function calculate() {
+                if (previousInput === '' || operation === null || waitingForNewInput) {
+                    return;
+                }
+                
+                let result;
+                const prev = parseExpression(previousInput);
+                const current = parseExpression(currentInput);
+                
+                try {
+                    switch (operation) {
+                        case 'add':
+                            result = prev + current;
+                            break;
+                        case 'subtract':
+                            result = prev - current;
+                            break;
+                        case 'multiply':
+                            result = prev * current;
+                            break;
+                        case 'divide':
+                            if (current === 0) {
+                                throw new Error('Divisão por zero!');
+                            }
+                            result = prev / current;
+                            break;
+                        case 'power':
+                            result = Math.pow(prev, current);
+                            break;
+                    }
+                    
+                    if (isNaN(result) || !isFinite(result)) {
+                        throw new Error('Operação inválida');
+                    }
+                    
+                    // Adicionar ao histórico
+                    const operationSymbol = getOperationSymbol(operation);
+                    addToHistory(`${previousInput} ${operationSymbol} ${currentInput} = ${formatResult(result)}`);
+                    
+                    lastAnswer = result;
+                    currentInput = formatResult(result);
+                    operation = null;
+                    previousInput = '';
+                    waitingForNewInput = true;
+                } catch (error) {
+                    displayError(error.message);
+                }
+            }
+            
+            function parseExpression(expr) {
+                // Substitui π pelo valor numérico
+                return parseFloat(expr.replace('π', Math.PI));
+            }
+            
+            function formatResult(result) {
+                // Formata o resultado para notação científica se necessário
+                if (Math.abs(result) > 1e10 || (Math.abs(result) < 1e-5 && result !== 0)) {
+                    return result.toExponential(6);
+                }
+                
+                // Arredonda para evitar problemas de ponto flutuante
+                return Math.round(result * 1e10) / 1e10;
+            }
+            
+            function calculatePercent() {
+                try {
+                    const value = parseExpression(currentInput);
+                    const result = value / 100;
+                    
+                    addToHistory(`${value}% = ${formatResult(result)}`);
+                    
+                    currentInput = formatResult(result);
+                    waitingForNewInput = true;
+                } catch (error) {
+                    displayError('Erro no cálculo de %');
+                }
+            }
+            
+            function calculateSquareRoot() {
+                try {
+                    const value = parseExpression(currentInput);
+                    if (value < 0) {
+                        throw new Error('Raiz de número negativo!');
+                    }
+                    
+                    const result = Math.sqrt(value);
+                    
+                    addToHistory(`√${value} = ${formatResult(result)}`);
+                    
+                    currentInput = formatResult(result);
+                    waitingForNewInput = true;
+                } catch (error) {
+                    displayError(error.message);
+                }
+            }
+            
+            function calculateTrig(func) {
+                try {
+                    let value = parseExpression(currentInput);
+                    
+                    // Se estiver em modo graus, converte para radianos
+                    if (isDegreeMode) {
+                        value = value * Math.PI / 180;
+                    }
+                    
+                    let result;
+                    switch (func) {
+                        case 'sin':
+                            result = Math.sin(value);
+                            break;
+                        case 'cos':
+                            result = Math.cos(value);
+                            break;
+                        case 'tan':
+                            result = Math.tan(value);
+                            break;
+                    }
+                    
+                    const modeText = isDegreeMode ? 'DEG' : 'RAD';
+                    addToHistory(`${func}(${currentInput}) ${modeText} = ${formatResult(result)}`);
+                    
+                    currentInput = formatResult(result);
+                    waitingForNewInput = true;
+                } catch (error) {
+                    displayError('Erro na função trig');
+                }
+            }
+            
+            function calculateLog() {
+                try {
+                    const value = parseExpression(currentInput);
+                    if (value <= 0) {
+                        throw new Error('Log de número ≤ 0!');
+                    }
+                    
+                    const result = Math.log10(value);
+                    
+                    addToHistory(`log(${value}) = ${formatResult(result)}`);
+                    
+                    currentInput = formatResult(result);
+                    waitingForNewInput = true;
+                } catch (error) {
+                    displayError(error.message);
+                }
+            }
+            
+            function calculateLn() {
+                try {
+                    const value = parseExpression(currentInput);
+                    if (value <= 0) {
+                        throw new Error('ln de número ≤ 0!');
+                    }
+                    
+                    const result = Math.log(value);
+                    
+                    addToHistory(`ln(${value}) = ${formatResult(result)}`);
+                    
+                    currentInput = formatResult(result);
+                    waitingForNewInput = true;
+                } catch (error) {
+                    displayError(error.message);
+                }
+            }
+            
+            function calculateFactorial() {
+                try {
+                    const value = parseInt(currentInput);
+                    if (value < 0 || !Number.isInteger(value)) {
+                        throw new Error('Fatorial: inteiro ≥ 0!');
+                    }
+                    
+                    let result = 1;
+                    for (let i = 2; i <= value; i++) {
+                        result *= i;
+                    }
+                    
+                    addToHistory(`${value}! = ${formatResult(result)}`);
+                    
+                    currentInput = formatResult(result);
+                    waitingForNewInput = true;
+                } catch (error) {
+                    displayError(error.message);
+                }
+            }
+            
+            function toggleParentheses() {
+                if (parenthesesOpen) {
+                    currentInput += ')';
+                } else {
+                    currentInput += '(';
+                }
+                parenthesesOpen = !parenthesesOpen;
+            }
+            
+            function toggleAngleMode() {
+                isDegreeMode = !isDegreeMode;
+                const modeText = isDegreeMode ? "Modo: Graus (DEG)" : "Modo: Radianos (RAD)";
+                historyDisplay.innerHTML = `<span class="mode-indicator">${modeText}</span>`;
+                setTimeout(() => {
+                    updateDisplay();
+                }, 1500);
+            }
+            
+            function clearAll() {
+                currentInput = '0';
+                previousInput = '';
+                operation = null;
+                waitingForNewInput = false;
+                parenthesesOpen = false;
+            }
+            
+            function deleteLast() {
+                if (currentInput.length > 1) {
+                    currentInput = currentInput.slice(0, -1);
+                } else {
+                    currentInput = '0';
+                }
+            }
+            
+            function displayError(message) {
+                historyDisplay.innerHTML = `<span class="error">${message}</span>`;
+                setTimeout(() => {
+                    updateDisplay();
+                }, 3000);
+            }
+            
+            function addToHistory(entry) {
+                calculationHistory.unshift(entry);
+                if (calculationHistory.length > 10) {
+                    calculationHistory.pop();
+                }
+                updateHistoryPanel();
+            }
+            
+            function updateDisplay() {
+                inputDisplay.textContent = currentInput;
+                
+                if (previousInput !== '' && operation !== null) {
+                    historyDisplay.textContent = `${previousInput} ${getOperationSymbol(operation)}`;
+                } else {
+                    historyDisplay.textContent = '';
+                }
+            }
+            
+            function updateHistoryPanel() {
+                historyList.innerHTML = '';
+                calculationHistory.forEach(entry => {
+                    const li = document.createElement('li');
+                    li.className = 'history-item';
+                    li.textContent = entry;
+                    li.addEventListener('click', () => {
+                        const parts = entry.split(' = ');
+                        if (parts.length === 2) {
+                            currentInput = parts[1];
+                            updateDisplay();
+                            toggleHistoryPanel();
+                        }
+                    });
+                    historyList.appendChild(li);
+                });
+            }
+            
+            function updateShiftButtons() {
+                const shiftButton = document.querySelector('[data-action="shift"]');
+                if (shiftMode) {
+                    shiftButton.style.background = '#ffcc00';
+                    shiftButton.style.color = '#333';
+                } else {
+                    shiftButton.style.background = '';
+                    shiftButton.style.color = '';
+                }
+            }
+            
+            function getOperationSymbol(op) {
+                switch (op) {
+                    case 'add': return '+';
+                    case 'subtract': return '-';
+                    case 'multiply': return '×';
+                    case 'divide': return '÷';
+                    case 'power': return '^';
+                    default: return '';
+                }
+            }
+            
+            function toggleTheme() {
+                document.body.classList.toggle('dark-theme');
+                themeToggle.textContent = document.body.classList.contains('dark-theme') ? '☀️' : '🌙';
+                
+                if (document.body.classList.contains('dark-theme')) {
+                    document.body.style.background = '#505050';
+                    document.querySelector('.calculator').style.background = '#707070';
+                    document.querySelector('.display-container').style.background = '#1a1a1a'; // Mais escuro no modo escuro
+                    document.querySelector('.display').style.background = '#9cad9f';
+                    document.querySelector('.keypad').style.background = '#808080';
+                } else {
+                    document.body.style.background = '#8b8b8b';
+                    document.querySelector('.calculator').style.background = '#c0c0c0';
+                    document.querySelector('.display-container').style.background = '#2a2a2a';
+                    document.querySelector('.display').style.background = '#9cad9f';
+                    document.querySelector('.keypad').style.background = '#a0a0a0';
+                }
+            }
+            
+            function toggleHistoryPanel() {
+                historyPanel.classList.toggle('open');
+            }
+            
+            function handleKeyboardInput(e) {
+                const key = e.key;
+                
+                if (!isNaN(key)) {
+                    inputNumber(key);
+                } else {
+                    switch (key) {
+                        case '+':
+                            handleOperation('add');
+                            break;
+                        case '-':
+                            handleOperation('subtract');
+                            break;
+                        case '*':
+                            handleOperation('multiply');
+                            break;
+                        case '/':
+                            e.preventDefault();
+                            handleOperation('divide');
+                            break;
+                        case 'Enter':
+                        case '=':
+                            e.preventDefault();
+                            handleOperation('equals');
+                            break;
+                        case 'Escape':
+                            handleOperation('clear');
+                            break;
+                        case 'Backspace':
+                            handleOperation('delete');
+                            break;
+                        case '.':
+                            inputNumber('.');
+                            break;
+                        case '%':
+                            handleOperation('percent');
+                            break;
+                        case 'p':
+                        case 'P':
+                            if (e.ctrlKey) return;
+                            inputNumber('π');
+                            break;
+                    }
+                }
+                
+                updateDisplay();
+            }
+        });
+    </script>
+</body>
+</html>
