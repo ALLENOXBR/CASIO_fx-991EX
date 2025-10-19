@@ -346,7 +346,7 @@
             <!-- Linha 2: Funções matemáticas -->
             <button class="calc-btn btn-function" data-action="abs">Abs</button>
             <button class="calc-btn btn-function" data-action="x³">x³</button>
-            <button class="calc-btn btn-function" data-action="x¹">x⁻¹</button>
+            <button class="calc-btn btn-function" data-action="x²">x²</button>
             <button class="calc-btn btn-function" data-action="log">log</button>
             <button class="calc-btn btn-function" data-action="ln">ln</button>
             <button class="calc-btn btn-function" data-action="hyp">HYP</button>
@@ -444,6 +444,8 @@
             let currentMode = 'COMP';
             let isEngineeringMode = false;
             let cursorVisible = true;
+            let percentageOperation = null;
+            let percentageBase = null;
 
             // Inicialização
             updateDisplay();
@@ -544,6 +546,9 @@
                     case 'x³':
                         calculateCube();
                         break;
+                    case 'x²':
+                        calculateSquare();
+                        break;
                     case 'x¹':
                         calculateReciprocal();
                         break;
@@ -590,7 +595,7 @@
                         memoryAdd();
                         break;
                     case 'percentage':
-                        calculatePercent();
+                        calculatePercentage();
                         break;
                     case 'sqrt':
                         calculateSquareRoot();
@@ -683,6 +688,55 @@
                 }
             }
             
+            function calculatePercentage() {
+                try {
+                    // Padrão Casio: funciona após uma operação
+                    if (previousInput !== '' && operation !== null) {
+                        const base = parseExpression(previousInput);
+                        const percentage = parseExpression(currentInput);
+                        
+                        let result;
+                        switch (operation) {
+                            case 'add':
+                                result = base + (base * percentage / 100);
+                                break;
+                            case 'subtract':
+                                result = base - (base * percentage / 100);
+                                break;
+                            case 'multiply':
+                                result = base * (percentage / 100);
+                                break;
+                            case 'divide':
+                                if (percentage === 0) {
+                                    throw new Error('Divisão por zero');
+                                }
+                                result = base / (percentage / 100);
+                                break;
+                            default:
+                                // Se não há operação anterior, calcula apenas a porcentagem
+                                result = percentage / 100;
+                        }
+                        
+                        const operationSymbol = getOperationSymbol(operation);
+                        addToHistory(`${previousInput} ${operationSymbol} ${currentInput}% = ${formatResult(result)}`);
+                        
+                        currentInput = formatResult(result);
+                        operation = null;
+                        previousInput = '';
+                        waitingForNewInput = true;
+                    } else {
+                        // Se não há operação anterior, calcula apenas a porcentagem do número atual
+                        const value = parseExpression(currentInput);
+                        const result = value / 100;
+                        addToHistory(`${value}% = ${formatResult(result)}`);
+                        currentInput = formatResult(result);
+                        waitingForNewInput = true;
+                    }
+                } catch (error) {
+                    displayError('Erro no cálculo de %');
+                }
+            }
+            
             function parseExpression(expr) {
                 try {
                     // Substitui constantes e funções básicas
@@ -719,6 +773,18 @@
                     waitingForNewInput = true;
                 } catch (error) {
                     displayError('Erro no cálculo do cubo');
+                }
+            }
+            
+            function calculateSquare() {
+                try {
+                    const value = parseExpression(currentInput);
+                    const result = Math.pow(value, 2);
+                    addToHistory(`${value}² = ${formatResult(result)}`);
+                    currentInput = formatResult(result);
+                    waitingForNewInput = true;
+                } catch (error) {
+                    displayError('Erro no cálculo do quadrado');
                 }
             }
             
@@ -939,18 +1005,6 @@
                 }
             }
             
-            function calculatePercent() {
-                try {
-                    const value = parseExpression(currentInput);
-                    const result = value / 100;
-                    addToHistory(`${value}% = ${formatResult(result)}`);
-                    currentInput = formatResult(result);
-                    waitingForNewInput = true;
-                } catch (error) {
-                    displayError('Erro no cálculo de %');
-                }
-            }
-            
             function calculatePolar() {
                 try {
                     const values = currentInput.split(',');
@@ -1022,6 +1076,8 @@
                 previousInput = '';
                 operation = null;
                 waitingForNewInput = false;
+                percentageOperation = null;
+                percentageBase = null;
                 showMessage('Calculadora limpa');
             }
             
